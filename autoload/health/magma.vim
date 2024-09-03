@@ -1,5 +1,5 @@
 function! s:python_has_module(module) abort
-    python3 import importlib
+    python3 import importlib.util
     return py3eval("importlib.util.find_spec(vim.eval('a:module')) is not None")
 endfunction
 
@@ -35,10 +35,7 @@ function! health#magma#check() abort
 
     call s:python_module_check("pynvim", "pynvim")
     call s:python_module_check("jupyter_client", "jupyter-client")
-    call s:python_module_check("ueberzug", "ueberzug")
     call s:python_module_check("PIL", "Pillow")
     call s:python_module_check("cairosvg", "cairosvg")
     call s:python_module_check("pnglatex", "pnglatex")
-    call s:python_module_check("plotly", "plotly")
-    call s:python_module_check("kaleido", "kaleido")
 endfunction

@@ -102,85 +102,6 @@ class NoCanvas(Canvas):
     ) -> None:
         pass
 
-
-class UeberzugCanvas(Canvas):
-    ueberzug_canvas: "ueberzug.Canvas"  # type: ignore
-
-    identifiers: Dict[str, "ueberzug.Placement"]  # type: ignore
-
-    _visible: Set[str]
-    _to_make_visible: Set[str]
-    _to_make_invisible: Set[str]
-
-    def __init__(self) -> None:
-        import ueberzug.lib.v0 as ueberzug
-
-        self.ueberzug_canvas = ueberzug.Canvas()
-        self.identifiers = {}
-
-        self._visible = set()
-        self._to_make_visible = set()
-        self._to_make_invisible = set()
-
-    def init(self) -> None:
-        self.ueberzug_canvas.__enter__()
-
-    def deinit(self) -> None:
-        if len(self.identifiers) > 0:
-            self.ueberzug_canvas.__exit__()
-
-    def present(self) -> None:
-        import ueberzug.lib.v0 as ueberzug
-
-        self._to_make_invisible.difference_update(self._to_make_visible)
-        for identifier in self._to_make_invisible:
-            self.identifiers[
-                identifier
-            ].visibility = ueberzug.Visibility.INVISIBLE
-        for identifier in self._to_make_visible:
-            self.identifiers[
-                identifier
-            ].visibility = ueberzug.Visibility.VISIBLE
-            self._visible.add(identifier)
-        self._to_make_invisible.clear()
-        self._to_make_visible.clear()
-
-    def clear(self) -> None:
-        for identifier in self._visible:
-            self._to_make_invisible.add(identifier)
-        self._visible.clear()
-
-    def add_image(
-        self,
-        path: str,
-        identifier: str,
-        x: int,
-        y: int,
-        width: int,
-        height: int,
-    ) -> None:
-        import ueberzug.lib.v0 as ueberzug
-
-        if width > 0 and height > 0:
-            identifier += f"-{os.getpid()}-{x}-{y}-{width}-{height}"
-
-            if identifier in self.identifiers:
-                img = self.identifiers[identifier]
-            else:
-                img = self.ueberzug_canvas.create_placement(
-                    identifier,
-                    x=x,
-                    y=y,
-                    width=width,
-                    height=height,
-                    scaler=ueberzug.ScalerOption.FIT_CONTAIN.value,
-                )
-                self.identifiers[identifier] = img
-            img.path = path
-
-            self._to_make_visible.add(identifier)
-
-
 class KittyImage:
     # Adapted from https://sw.kovidgoyal.net/kitty/graphics-protocol/
 
@@ -361,8 +282,6 @@ class Kitty(Canvas):
 def get_canvas_given_provider(name: str, nvim: Nvim) -> Canvas:
     if name == "none":
         return NoCanvas()
-    elif name == "ueberzug":
-        return UeberzugCanvas()
     elif name == "kitty":
         return Kitty(nvim)
     else:

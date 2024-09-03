@@ -116,10 +116,7 @@ class ImageOutputChunk(OutputChunk):
 
         # FIXME: This is not really in Ueberzug's public API.
         #        We should move this function into this codebase.
-        try:
-            from ueberzug.process import get_pty_slave
-        except ImportError:
-            return None
+        return None
 
         pty = get_pty_slave(os.getppid())
         assert pty is not None
@@ -240,16 +237,6 @@ def to_outputchunk(
             cairosvg.svg2png(svg, write_to=file)
         return _to_image_chunk(path)
 
-    def _from_application_plotly(figure_json: Any) -> OutputChunk:
-        from plotly.io import from_json
-        import json
-
-        figure = from_json(json.dumps(figure_json))
-
-        with alloc_file("png", "wb") as (path, file):
-            figure.write_image(file, engine="kaleido")
-        return _to_image_chunk(path)
-
     def _from_latex(tex: str) -> OutputChunk:
         from pnglatex import pnglatex
 
@@ -264,7 +251,6 @@ def to_outputchunk(
     OUTPUT_CHUNKS = {
         "image/png": _from_image_png,
         "image/svg+xml": _from_image_svgxml,
-        "application/vnd.plotly.v1+json": _from_application_plotly,
         "text/latex": _from_latex,
         "text/plain": _from_plaintext,
     }
