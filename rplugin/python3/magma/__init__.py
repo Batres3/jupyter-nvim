@@ -99,6 +99,9 @@ class Magma:
     def _get_magma(self, requires_instance: bool) -> Optional[MagmaBuffer]:
         maybe_magma = self.buffers.get(self.nvim.current.buffer.number)
         if requires_instance and maybe_magma is None:
+            self.command_init([])
+            maybe_magma = self.buffers.get(self.nvim.current.buffer.number)
+            if maybe_magma is not None: return maybe_magma
             raise MagmaException(
                 "Magma is not initialized; run `:MagmaInit <kernel_name>` to \
                 initialize."
@@ -163,6 +166,10 @@ class Magma:
         else:
             PROMPT = "Select the kernel to launch:"
             available_kernels = get_available_kernels()
+            filetype = self.nvim.exec_lua("return vim.bo.filetype")
+            if filetype in ["py", "python", "python3"]:
+                self.command_init(["python3"])
+                return
             if self.nvim.exec_lua("return vim.ui.select ~= nil"):
                 self.nvim.exec_lua(
                     """
